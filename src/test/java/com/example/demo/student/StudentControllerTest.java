@@ -1,5 +1,7 @@
 package com.example.demo.student;
 
+import com.example.demo.student.exception.ApiRequestException;
+import com.example.demo.student.exception.ApiRequestExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +24,7 @@ import java.util.List;
 import static com.example.demo.student.Gender.FEMALE;
 import static com.example.demo.student.Gender.MALE;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -54,7 +57,10 @@ class StudentControllerTest {
 
     @BeforeEach
     void setUp() {
-        this.mockMvc = MockMvcBuilders.standaloneSetup(underTestController).build();
+        this.mockMvc = MockMvcBuilders
+                .standaloneSetup(underTestController)
+                .setControllerAdvice(ApiRequestExceptionHandler.class)
+                .build();
     }
 
     @Test
@@ -86,6 +92,7 @@ class StudentControllerTest {
                 .perform(MockMvcRequestBuilders
                         .get("/api/v1/students/1")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").exists())
@@ -142,5 +149,24 @@ class StudentControllerTest {
         mockMvc
                 .perform(mockRequest)
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void checkIfNullIdThrowsException() throws Exception {
+        // given
+        Long id = 2L;
+        given(studentService.getStudentById(id)).willThrow(new ApiRequestException("oh my god error"));
+
+        // when
+        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
+                .get("/api/v1/students/{studentId}", id)
+                .contentType(MediaType.APPLICATION_JSON);
+
+        // then
+        mockMvc
+                .perform(mockRequest)
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ApiRequestException))
+                .andExpect(result -> assertThat(result.getResolvedException().getMessage()).isEqualTo("oh my god error"));
     }
 }

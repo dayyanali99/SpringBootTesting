@@ -1,12 +1,10 @@
 package com.example.demo.student;
 
-import com.example.demo.student.exception.BadRequestException;
+import com.example.demo.student.exception.ApiRequestException;
 import com.example.demo.student.exception.StudentNotFoundException;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -29,7 +27,7 @@ public class StudentService {
         Boolean existsEmail = studentRepository
                 .selectExistsEmail(student.getEmail());
         if (existsEmail) {
-            throw new BadRequestException(
+            throw new ApiRequestException(
                     "Email " + student.getEmail() + " taken");
         }
 

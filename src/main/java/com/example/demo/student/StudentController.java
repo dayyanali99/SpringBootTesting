@@ -1,5 +1,6 @@
 package com.example.demo.student;
 
+import com.example.demo.student.exception.ApiRequestException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -20,12 +21,13 @@ public class StudentController {
     }
 
     @GetMapping("/{studentId}")
+    @ResponseStatus(HttpStatus.OK)
     public Student getStudentById(@PathVariable("studentId") Long id) {
         return studentService.getStudentById(id);
     }
 
     @PostMapping
-    @ResponseStatus(code = HttpStatus.CREATED, reason = "Student added successfully")
+    @ResponseStatus(code = HttpStatus.CREATED)
     public void addStudent(@Valid @RequestBody Student student) {
         studentService.addStudent(student);
     }
